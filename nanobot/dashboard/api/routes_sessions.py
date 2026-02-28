@@ -19,9 +19,10 @@ async def list_sessions(request: Request):
 async def get_session(request: Request, session_key: str):
     """Return messages for a specific session."""
     sm = request.app.state.session_manager
+    path = sm._get_session_path(session_key)
+    if not path.exists() and session_key not in sm._cache:
+        raise HTTPException(status_code=404, detail="Session not found")
     session = sm.get_or_create(session_key)
-    if not session.messages:
-        raise HTTPException(status_code=404, detail="Session not found or empty")
     messages = []
     for m in session.messages:
         messages.append({

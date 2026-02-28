@@ -1,54 +1,65 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWebSocket } from "../hooks/useWebSocket";
 import ChatWindow from "../components/ChatWindow";
 import type { ChatMessage } from "../types";
 
 export default function ChatPage() {
   const { connected, messages: wsMessages, send } = useWebSocket("/api/chat/ws");
+  const [userMessages, setUserMessages] = useState<ChatMessage[]>([]);
   const [streaming, setStreaming] = useState("");
+  const prevLenRef = useRef(0);
 
-  const chatMessages = useMemo(() => {
-    const out: ChatMessage[] = [];
-    let currentAssistant = "";
-
-    for (const m of wsMessages) {
+  // Derive chat messages from WS stream, interleaving user inputs
+  useEffect(() => {
+    let assistant = "";
+    for (let i = prevLenRef.current; i < wsMessages.length; i++) {
+      const m = wsMessages[i];
       switch (m.type) {
         case "start":
-          currentAssistant = "";
+          assistant = "";
           setStreaming("");
           break;
         case "text_delta":
         case "tool_hint":
-          currentAssistant += m.data + "\n";
-          setStreaming(currentAssistant);
+          assistant += m.data + "\n";
+          setStreaming(assistant);
           break;
         case "done":
-          setStreaming("");
-          currentAssistant = "";
-          out.push({ role: "assistant", content: m.data });
-          break;
         case "error":
           setStreaming("");
-          currentAssistant = "";
-          out.push({ role: "system", content: `Error: ${m.data}` });
           break;
+      }
+    }
+    prevLenRef.current = wsMessages.length;
+  }, [wsMessages]);
+
+  const assistantMessages = useMemo(() => {
+    const out: ChatMessage[] = [];
+    for (const m of wsMessages) {
+      if (m.type === "done") {
+        out.push({ role: "assistant", content: m.data });
+      } else if (m.type === "error") {
+        out.push({ role: "system", content: `Error: ${m.data}` });
       }
     }
     return out;
   }, [wsMessages]);
 
-  const handleSend = (text: string) => {
-    // The WS messages list already contains all state, so we just append
-    // user messages locally. The server will echo back the response.
-    wsMessages.push({ type: "done", data: "" }); // no-op marker
-    chatMessages.push({ role: "user", content: text });
-    send(text);
-  };
-
-  // Combine user messages (local) with WS responses
+  // Interleave: user msg, then assistant reply, user msg, then assistant reply…
   const allMessages = useMemo(() => {
-    return chatMessages;
-  }, [chatMessages]);
+    const merged: ChatMessage[] = [];
+    const maxLen = Math.max(userMessages.length, assistantMessages.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < userMessages.length) merged.push(userMessages[i]);
+      if (i < assistantMessages.length) merged.push(assistantMessages[i]);
+    }
+    return merged;
+  }, [userMessages, assistantMessages]);
+
+  const handleSend = useCallback((text: string) => {
+    setUserMessages((prev) => [...prev, { role: "user", content: text }]);
+    send(text);
+  }, [send]);
 
   return (
     <div style={{ height: "calc(100vh - 3rem)" }}>

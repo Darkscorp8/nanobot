@@ -2,29 +2,30 @@
 
 from __future__ import annotations
 
-import re
-
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 router = APIRouter()
 
-_SECRET_RE = re.compile(
-    r"(sk-|xoxb-|xapp-|Bearer |token |secret |password )"
-    r"[A-Za-z0-9_\-]{4}([A-Za-z0-9_\-]+)",
-    re.IGNORECASE,
-)
+_SECRET_FIELD_NAMES = {
+    "api_key", "apiKey", "token", "secret", "password",
+    "app_secret", "appSecret", "access_token", "accessToken",
+    "auth_token", "authToken", "bot_token", "botToken",
+    "app_token", "appToken", "client_secret", "clientSecret",
+    "imap_password", "imapPassword", "smtp_password", "smtpPassword",
+    "encrypt_key", "encryptKey", "verification_token", "verificationToken",
+    "claw_token", "clawToken", "bridge_token", "bridgeToken",
+}
 
 
-def _mask_secrets(obj):
+def _mask_secrets(obj, key: str = ""):
     """Recursively mask API keys and secrets in a dict."""
     if isinstance(obj, dict):
-        return {k: _mask_secrets(v) for k, v in obj.items()}
+        return {k: _mask_secrets(v, k) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [_mask_secrets(i) for i in obj]
-    if isinstance(obj, str) and len(obj) > 8:
-        if _SECRET_RE.search(obj):
-            return obj[:8] + "***"
+        return [_mask_secrets(i, key) for i in obj]
+    if isinstance(obj, str) and len(obj) > 4 and key in _SECRET_FIELD_NAMES:
+        return obj[:4] + "***"
     return obj
 
 

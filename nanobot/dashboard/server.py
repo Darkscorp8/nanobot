@@ -67,9 +67,9 @@ def create_dashboard_app(
 
     # --- API routes ---
     from nanobot.dashboard.api.routes_agent import router as agent_router
-    from nanobot.dashboard.api.routes_sessions import router as sessions_router
-    from nanobot.dashboard.api.routes_config import router as config_router
     from nanobot.dashboard.api.routes_chat import router as chat_router
+    from nanobot.dashboard.api.routes_config import router as config_router
+    from nanobot.dashboard.api.routes_sessions import router as sessions_router
 
     app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
     app.include_router(sessions_router, prefix="/api/sessions", tags=["sessions"])

@@ -271,6 +271,15 @@ class HeartbeatConfig(Base):
     interval_s: int = 30 * 60  # 30 minutes
 
 
+class DashboardConfig(Base):
+    """Web dashboard configuration."""
+
+    enabled: bool = False
+    host: str = "127.0.0.1"
+    port: int = 18791
+    auth_token: str = ""  # Simple bearer token for API protection
+
+
 class GatewayConfig(Base):
     """Gateway/server configuration."""
 
@@ -327,6 +336,7 @@ class Config(BaseSettings):
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
+    dashboard: DashboardConfig = Field(default_factory=DashboardConfig)
 
     @property
     def workspace_path(self) -> Path:

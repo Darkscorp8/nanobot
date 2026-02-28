@@ -375,15 +375,31 @@ def gateway(
         console.print(f"[green]✓[/green] Cron: {cron_status['jobs']} scheduled jobs")
     
     console.print(f"[green]✓[/green] Heartbeat: every {hb_cfg.interval_s}s")
-    
+
+    # --- Optional dashboard ---
+    dash_coro = None
+    if config.dashboard.enabled:
+        try:
+            from nanobot.dashboard.server import create_dashboard_app, start_dashboard
+
+            dash_app = create_dashboard_app(config, session_manager, agent_loop=agent)
+            dash_host = config.dashboard.host
+            dash_port = config.dashboard.port
+            dash_coro = start_dashboard(dash_app, dash_host, dash_port)
+            console.print(
+                f"[green]✓[/green] Dashboard: http://{dash_host}:{dash_port}"
+            )
+        except RuntimeError as exc:
+            console.print(f"[yellow]Dashboard skipped: {exc}[/yellow]")
+
     async def run():
         try:
             await cron.start()
             await heartbeat.start()
-            await asyncio.gather(
-                agent.run(),
-                channels.start_all(),
-            )
+            tasks = [agent.run(), channels.start_all()]
+            if dash_coro is not None:
+                tasks.append(dash_coro)
+            await asyncio.gather(*tasks)
         except KeyboardInterrupt:
             console.print("\nShutting down...")
         finally:
@@ -569,6 +585,47 @@ def agent(
                 await agent_loop.close_mcp()
 
         asyncio.run(run_interactive())
+
+
+# ============================================================================
+# Dashboard Command
+# ============================================================================
+
+
+@app.command()
+def dashboard(
+    host: str = typer.Option(None, "--host", "-H", help="Dashboard host (default from config)"),
+    port: int = typer.Option(None, "--port", "-p", help="Dashboard port (default from config)"),
+):
+    """Start the web dashboard (standalone)."""
+    from nanobot.config.loader import load_config
+
+    config = load_config()
+    if not config.dashboard.enabled:
+        console.print(
+            "[yellow]Dashboard is disabled in config. "
+            "Set dashboard.enabled = true in ~/.nanobot/config.json[/yellow]"
+        )
+        raise typer.Exit(1)
+
+    try:
+        from nanobot.dashboard.server import create_dashboard_app, start_dashboard
+    except RuntimeError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(1)
+
+    from nanobot.session.manager import SessionManager
+
+    sync_workspace_templates(config.workspace_path)
+    session_manager = SessionManager(config.workspace_path)
+
+    dash_host = host or config.dashboard.host
+    dash_port = port or config.dashboard.port
+
+    console.print(f"{__logo__} Starting nanobot dashboard on http://{dash_host}:{dash_port}")
+    dash_app = create_dashboard_app(config, session_manager)
+
+    asyncio.run(start_dashboard(dash_app, dash_host, dash_port))
 
 
 # ============================================================================

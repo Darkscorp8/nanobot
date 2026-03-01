@@ -20,14 +20,14 @@ export default function SubAgentsPage() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "1rem" }}>Sub-Agents</h2>
-      {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <h2 className="text-xl font-semibold mb-4">Sub-Agents</h2>
+      {error && <p className="text-red-500 mb-3">{error}</p>}
+      <div className="flex flex-col gap-2">
         {agents.map((a) => (
           <SubAgentCard key={a.id} agent={a} />
         ))}
         {agents.length === 0 && (
-          <p style={{ color: "#94a3b8" }}>No sub-agents running.</p>
+          <p className="text-slate-400">No sub-agents running.</p>
         )}
       </div>
     </div>

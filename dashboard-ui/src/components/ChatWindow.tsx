@@ -25,60 +25,37 @@ export default function ChatWindow({ messages, onSend, streaming, disabled }: Pr
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem" }}>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-2">
         {messages.map((m, i) => (
           <MessageBubble key={i} msg={m} />
         ))}
         {streaming && (
-          <div
-            style={{
-              background: "#f0fdf4",
-              borderRadius: 10,
-              padding: "0.6rem 0.9rem",
-              fontSize: "0.88rem",
-              whiteSpace: "pre-wrap",
-              maxWidth: "75%",
-              opacity: 0.8,
-            }}
-          >
-            <div style={{ fontSize: "0.72rem", fontWeight: 600, color: "#64748b", marginBottom: 2 }}>
-              Assistant
+          <div className="flex justify-start mb-2">
+            <div className="bg-green-50 dark:bg-green-900/30 rounded-xl px-3.5 py-2.5 max-w-[75%] text-sm whitespace-pre-wrap opacity-80">
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
+                Assistant
+              </div>
+              {streaming}
+              <span className="animate-blink">▌</span>
             </div>
-            {streaming}
-            <span style={{ animation: "blink 1s steps(2) infinite" }}>▌</span>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
-      <div style={{ display: "flex", gap: 8, padding: "0.5rem 0" }}>
+      <div className="flex gap-2 py-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           disabled={disabled}
           placeholder="Type a message…"
-          style={{
-            flex: 1,
-            padding: "0.6rem 0.8rem",
-            borderRadius: 8,
-            border: "1px solid #cbd5e1",
-            fontSize: "0.9rem",
-            outline: "none",
-          }}
+          className="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
         />
         <button
           onClick={handleSend}
           disabled={disabled || !input.trim()}
-          style={{
-            padding: "0.6rem 1.2rem",
-            borderRadius: 8,
-            border: "none",
-            background: "#4f46e5",
-            color: "#fff",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-          }}
+          className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Send
         </button>

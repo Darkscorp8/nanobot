@@ -20,9 +20,9 @@ export default function StatusPage() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "1rem" }}>Agent Status</h2>
-      {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-      {status ? <AgentStatusCard status={status} /> : <p>Loading…</p>}
+      <h2 className="text-xl font-semibold mb-4">Agent Status</h2>
+      {error && <p className="text-red-500 mb-3">{error}</p>}
+      {status ? <AgentStatusCard status={status} /> : <p className="text-slate-400">Loading…</p>}
     </div>
   );
 }

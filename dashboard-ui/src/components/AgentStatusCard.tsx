@@ -1,36 +1,20 @@
 import type { AgentStatus } from "../types";
 
-const STATUS_COLORS: Record<string, string> = {
-  idle: "#22c55e",
-  working: "#f59e0b",
-  error: "#ef4444",
+const STATUS_DOT: Record<string, string> = {
+  idle: "bg-green-500",
+  working: "bg-amber-400",
+  error: "bg-red-500",
 };
 
 export default function AgentStatusCard({ status }: { status: AgentStatus }) {
-  const color = STATUS_COLORS[status.status] ?? "#94a3b8";
+  const dotClass = STATUS_DOT[status.status] ?? "bg-slate-400";
   return (
-    <div
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: 12,
-        padding: "1.25rem",
-        background: "#fff",
-        maxWidth: 360,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <span
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: "50%",
-            background: color,
-            display: "inline-block",
-          }}
-        />
-        <strong style={{ textTransform: "capitalize" }}>{status.status}</strong>
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-5 bg-white dark:bg-slate-800 max-w-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`w-2.5 h-2.5 rounded-full inline-block ${dotClass}`} />
+        <strong className="capitalize">{status.status}</strong>
       </div>
-      <div style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.8 }}>
+      <div className="text-sm text-slate-600 dark:text-slate-300 leading-7">
         <div><b>Model:</b> {status.model}</div>
         <div><b>Provider:</b> {status.provider}</div>
         <div><b>Uptime:</b> {Math.round(status.uptime_seconds)}s</div>

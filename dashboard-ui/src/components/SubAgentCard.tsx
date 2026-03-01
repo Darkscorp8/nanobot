@@ -2,28 +2,12 @@ import type { SubAgent } from "../types";
 
 export default function SubAgentCard({ agent }: { agent: SubAgent }) {
   return (
-    <div
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: 8,
-        padding: "0.75rem 1rem",
-        background: "#fff",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-      }}
-    >
+    <div className="border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 bg-white dark:bg-slate-800 flex items-center gap-2.5">
       <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: agent.done ? "#94a3b8" : "#22c55e",
-          display: "inline-block",
-        }}
+        className={`w-2 h-2 rounded-full inline-block ${agent.done ? "bg-slate-400" : "bg-green-500"}`}
       />
-      <code style={{ fontSize: "0.85rem" }}>{agent.id}</code>
-      <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#64748b" }}>
+      <code className="text-sm">{agent.id}</code>
+      <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
         {agent.done ? "completed" : "running"}
       </span>
     </div>

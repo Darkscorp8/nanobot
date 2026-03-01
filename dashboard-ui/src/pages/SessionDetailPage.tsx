@@ -26,42 +26,28 @@ export default function SessionDetailPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem" }}>
-        <button onClick={() => navigate("/sessions")} style={{ cursor: "pointer", background: "none", border: "none", fontSize: "1rem" }}>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => navigate("/sessions")}
+          className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-transparent border-none cursor-pointer text-base"
+        >
           ← Back
         </button>
-        <h2 style={{ margin: 0 }}>Session: {key}</h2>
+        <h2 className="text-xl font-semibold m-0">Session: {key}</h2>
         <button
           onClick={handleClear}
-          style={{
-            marginLeft: "auto",
-            padding: "0.4rem 0.8rem",
-            borderRadius: 6,
-            border: "1px solid #fca5a5",
-            color: "#ef4444",
-            background: "#fff",
-            cursor: "pointer",
-            fontSize: "0.82rem",
-          }}
+          className="ml-auto px-3 py-1.5 rounded-md border border-red-300 dark:border-red-700 text-red-500 dark:text-red-400 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer text-xs transition-colors"
         >
           Clear
         </button>
       </div>
-      {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 10,
-          padding: "1rem",
-          maxHeight: "70vh",
-          overflowY: "auto",
-        }}
-      >
+      {error && <p className="text-red-500 mb-3">{error}</p>}
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 max-h-[70vh] overflow-y-auto">
         {messages.map((m, i) => (
           <MessageBubble key={i} msg={m} />
         ))}
         {messages.length === 0 && (
-          <p style={{ color: "#94a3b8", textAlign: "center" }}>No messages.</p>
+          <p className="text-slate-400 text-center text-sm">No messages.</p>
         )}
       </div>
     </div>

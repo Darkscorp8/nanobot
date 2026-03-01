@@ -1,49 +1,38 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useWebSocket } from "../hooks/useWebSocket";
+import { useCallback, useMemo, useState } from "react";
+import { useChat } from "../hooks/useChat";
 import ChatWindow from "../components/ChatWindow";
 import type { ChatMessage } from "../types";
 
 export default function ChatPage() {
-  const { connected, messages: wsMessages, send } = useWebSocket("/api/chat/ws");
+  const { messages: sseMessages, send } = useChat();
   const [userMessages, setUserMessages] = useState<ChatMessage[]>([]);
-  const [streaming, setStreaming] = useState("");
-  const prevLenRef = useRef(0);
 
-  // Derive chat messages from WS stream, interleaving user inputs
-  useEffect(() => {
-    let assistant = "";
-    for (let i = prevLenRef.current; i < wsMessages.length; i++) {
-      const m = wsMessages[i];
+  // Derive streaming text and completed assistant messages from SSE events
+  const { streaming, assistantMessages } = useMemo(() => {
+    let streamingText = "";
+    const completed: ChatMessage[] = [];
+
+    for (const m of sseMessages) {
       switch (m.type) {
         case "start":
-          assistant = "";
-          setStreaming("");
+          streamingText = "";
           break;
         case "text_delta":
         case "tool_hint":
-          assistant += m.data + "\n";
-          setStreaming(assistant);
+          streamingText += m.data + "\n";
           break;
         case "done":
+          streamingText = "";
+          completed.push({ role: "assistant", content: m.data });
+          break;
         case "error":
-          setStreaming("");
+          streamingText = "";
+          completed.push({ role: "system", content: `Error: ${m.data}` });
           break;
       }
     }
-    prevLenRef.current = wsMessages.length;
-  }, [wsMessages]);
-
-  const assistantMessages = useMemo(() => {
-    const out: ChatMessage[] = [];
-    for (const m of wsMessages) {
-      if (m.type === "done") {
-        out.push({ role: "assistant", content: m.data });
-      } else if (m.type === "error") {
-        out.push({ role: "system", content: `Error: ${m.data}` });
-      }
-    }
-    return out;
-  }, [wsMessages]);
+    return { streaming: streamingText, assistantMessages: completed };
+  }, [sseMessages]);
 
   // Interleave: user msg, then assistant reply, user msg, then assistant reply…
   const allMessages = useMemo(() => {
@@ -56,24 +45,22 @@ export default function ChatPage() {
     return merged;
   }, [userMessages, assistantMessages]);
 
-  const handleSend = useCallback((text: string) => {
-    setUserMessages((prev) => [...prev, { role: "user", content: text }]);
-    send(text);
-  }, [send]);
+  const handleSend = useCallback(
+    (text: string) => {
+      setUserMessages((prev) => [...prev, { role: "user", content: text }]);
+      void send(text);
+    },
+    [send],
+  );
 
   return (
-    <div style={{ height: "calc(100vh - 3rem)" }}>
-      <h2 style={{ marginBottom: "0.5rem" }}>
-        Chat{" "}
-        <span style={{ fontSize: "0.75rem", color: connected ? "#22c55e" : "#ef4444" }}>
-          {connected ? "● Connected" : "● Disconnected"}
-        </span>
-      </h2>
+    <div className="h-[calc(100vh-7rem)] flex flex-col">
+      <h2 className="text-xl font-semibold mb-2">Chat</h2>
       <ChatWindow
         messages={allMessages}
         onSend={handleSend}
         streaming={streaming}
-        disabled={!connected}
+        disabled={streaming.length > 0}
       />
     </div>
   );
